@@ -2,72 +2,26 @@ package internal
 
 import (
 	"fmt"
-	"reflect"
 )
 
-type PathFinder interface {
-	FindPath(m Map, c Creature, target Entity) []Coordinates
+type PathFinder[T Entity] interface {
+	FindPath(Map, Coordinates) []Coordinates
 }
 
-type queue struct {
-	values []Coordinates
+type BFSPathFinder[T Entity] struct {
+	target T
 }
 
-func (q *queue) enqueue(c Coordinates) {
-	q.values = append(q.values, c)
+func NewBFSPathFinder[T Entity]() BFSPathFinder[T] {
+	return BFSPathFinder[T]{}
 }
 
-func (q *queue) dequeue() (Coordinates, error) {
-	if q.isEmpty() {
-		return Coordinates{}, fmt.Errorf("queue is empty")
-	}
-
-	first := q.values[0]
-	q.values = q.values[1:]
-
-	return first, nil
-}
-
-func (q queue) isEmpty() bool {
-	if len(q.values) == 0 {
-		return true
-	}
-	return false
-}
-
-func (q queue) contains(c Coordinates) bool {
-	for _, value := range q.values {
-		if value == c {
-			return true
-		}
-	}
-	return false
-}
-
-type set struct {
-	values map[Coordinates]bool
-}
-
-func newSet() *set {
-	return &set{values: make(map[Coordinates]bool)}
-}
-
-func (s *set) add(c Coordinates) {
-	s.values[c] = true
-}
-
-func (s *set) contains(c Coordinates) bool {
-	return s.values[c]
-}
-
-type BFSPathFinder struct{}
-
-func (bfspf BFSPathFinder) FindPath(m Map, c Creature, target Entity) []Coordinates {
+func (bfspf BFSPathFinder[T]) FindPath(m Map, origin Coordinates) []Coordinates {
 	q := queue{}
 	visited := newSet()
 	predecessors := make(map[Coordinates]Coordinates)
 
-	q.enqueue(c.GetCoordinates())
+	q.enqueue(origin)
 
 	for !q.isEmpty() {
 		current, err := q.dequeue()
@@ -75,17 +29,16 @@ func (bfspf BFSPathFinder) FindPath(m Map, c Creature, target Entity) []Coordina
 			break
 		}
 
-		if isTarget(m, current, target) {
+		if bfspf.isTarget(m, current) {
 			return reconstrucPath(predecessors, current)
 		}
 
 		visited.add(current)
-
 		for _, neighbour := range findNeighbours(m, current) {
 			if q.contains(neighbour) || visited.contains(neighbour) {
 				continue
 			}
-			if isObstacle(m, neighbour) && !isTarget(m, neighbour, target) {
+			if isObstacle(m, neighbour) && !bfspf.isTarget(m, neighbour) {
 				continue
 			}
 
@@ -150,10 +103,65 @@ func isObstacle(m Map, c Coordinates) bool {
 	return false
 }
 
-func isTarget(m Map, c Coordinates, target Entity) bool {
+func (bfspf BFSPathFinder[T]) isTarget(m Map, c Coordinates) bool {
 	entity, found := Find[Entity](m, c)
-	if found && reflect.TypeOf(*entity) == reflect.TypeOf(target) {
+
+	if found {
+		if _, ok := entity.(T); ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+type queue struct {
+	values []Coordinates
+}
+
+func (q *queue) enqueue(c Coordinates) {
+	q.values = append(q.values, c)
+}
+
+func (q *queue) dequeue() (Coordinates, error) {
+	if q.isEmpty() {
+		return Coordinates{}, fmt.Errorf("queue is empty")
+	}
+
+	first := q.values[0]
+	q.values = q.values[1:]
+
+	return first, nil
+}
+
+func (q queue) isEmpty() bool {
+	if len(q.values) == 0 {
 		return true
 	}
 	return false
+}
+
+func (q queue) contains(c Coordinates) bool {
+	for _, value := range q.values {
+		if value == c {
+			return true
+		}
+	}
+	return false
+}
+
+type set struct {
+	values map[Coordinates]bool
+}
+
+func newSet() *set {
+	return &set{values: make(map[Coordinates]bool)}
+}
+
+func (s *set) add(c Coordinates) {
+	s.values[c] = true
+}
+
+func (s *set) contains(c Coordinates) bool {
+	return s.values[c]
 }
