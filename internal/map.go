@@ -46,17 +46,17 @@ func (m *Map) Delete(from Coordinates) {
 	delete(m.values, from)
 }
 
-func Find[T Entity](m Map, coordinates Coordinates) (*T, bool) {
+func Find[T Entity](m Map, coordinates Coordinates) (T, bool) {
 	entity, found := m.values[coordinates]
 
 	if found {
 		if e, ok := entity.(T); ok {
-			return &e, found
+			return e, found
 		}
 	}
 
 	var zeroValue T
-	return &zeroValue, found
+	return zeroValue, found
 }
 
 func FindByType[T Entity](m Map) []T {
