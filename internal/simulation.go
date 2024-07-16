@@ -35,11 +35,11 @@ func (s Simulation) Start() {
 func initActions() []Action {
 	initActions := []Action{}
 
-	initActions = append(initActions, NewSpawnAction[Herbivore](1))
-	initActions = append(initActions, NewSpawnAction[Predator](1))
-	initActions = append(initActions, NewSpawnAction[Grass](0))
-	initActions = append(initActions, NewSpawnAction[Rock](0))
-	initActions = append(initActions, NewSpawnAction[Tree](0))
+	initActions = append(initActions, NewSpawnAction[Herbivore](3))
+	initActions = append(initActions, NewSpawnAction[Predator](2))
+	initActions = append(initActions, NewSpawnAction[Grass](7))
+	initActions = append(initActions, NewSpawnAction[Rock](5))
+	initActions = append(initActions, NewSpawnAction[Tree](6))
 
 	return initActions
 }
