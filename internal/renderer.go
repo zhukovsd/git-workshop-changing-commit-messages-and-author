@@ -10,7 +10,6 @@ type ConsolePrintable interface {
 }
 
 const columnWidth = 2
-const errorSymbol = "❌"
 
 var emptySpace = strings.Repeat(" ", columnWidth)
 
@@ -24,15 +23,13 @@ func Render(m Map) {
 			coordinates := Coordinates{X: uint8(j), Y: uint8(i)}
 			entity, found := Find[Entity](m, coordinates)
 
-			if !found {
-				sb.WriteString(emptySpace)
-				continue
+			if found {
+				if entity, ok := entity.(ConsolePrintable); ok {
+					sb.WriteString(entity.GetConsoleSprite())
+					continue
+				}
 			}
-			if entity, ok := entity.(ConsolePrintable); ok {
-				sb.WriteString(entity.GetConsoleSprite())
-			} else {
-				sb.WriteString(errorSymbol)
-			}
+			sb.WriteString(emptySpace)
 		}
 		fmt.Println("│" + sb.String() + "│")
 	}
